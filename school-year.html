@@ -930,8 +930,6 @@ function buildDayBlock(idx) {
 
   // Drag
   if (!d.locked) {
-    // Drag events
-  if (!d.locked) {
     el.draggable = true;
     el.addEventListener('dragstart', (e) => onDragStart(e, idx));
     el.addEventListener('dragend',   (e) => onDragEnd(e, idx));
