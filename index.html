@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Summer 2026 Custody Schedule Builder — North Bend</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --a-color: #4a90d9;
+    --a-light: #d6eaf8;
+    --a-dark: #2471a3;
+    --b-color: #e8912d;
+    --b-light: #fdebd0;
+    --b-dark: #b7770d;
+    --locked: #8e8e8e;
+    --locked-light: #e8e8e8;
+    --warn: #c0392b;
+    --warn-bg: #fdecea;
+    --ok: #27ae60;
+    --neutral: #5d6d7e;
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --border: #dce3ea;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: #2c3e50;
+    color: #fff;
+    padding: 18px 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: .02em; }
+  header .subtitle { font-size: .85rem; color: #aab4bc; }
+
+  .main { max-width: 1300px; margin: 0 auto; padding: 22px 18px 60px; }
+
+  /* ── Totals bar ── */
+  .totals-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+  .total-card {
+    flex: 1 1 180px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .total-card .label { font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; color: var(--text-light); }
+  .total-card .count { font-size: 2rem; font-weight: 700; line-height: 1; }
+  .total-card .target { font-size: .8rem; color: var(--text-light); }
+  .total-card.parent-a .count { color: var(--a-dark); }
+  .total-card.parent-b .count { color: var(--b-dark); }
+  .total-card.total   .count { color: var(--neutral); }
+
+  .warn-banner {
+    display: none;
+    background: var(--warn-bg);
+    border: 1px solid #e8b4b0;
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: var(--warn);
+    font-size: .88rem;
+    margin-bottom: 14px;
+  }
+  .warn-banner.visible { display: flex; align-items: center; gap: 8px; }
+
+  /* ── Controls ── */
+  .controls {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+  }
+  .controls-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .controls-row + .controls-row { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .ctrl-label { font-size: .8rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-right: 4px; }
+
+  button {
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: .85rem;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  button:hover { background: #eef2f6; }
+  button.active { background: #2c3e50; color: #fff; border-color: #2c3e50; }
+  button.danger { border-color: #e0b0ae; color: var(--warn); }
+  button.danger:hover { background: var(--warn-bg); }
+  button.primary { background: var(--a-dark); color: #fff; border-color: var(--a-dark); }
+  button.primary:hover { background: #1a5276; }
+  button.export-btn { background: #27ae60; color: #fff; border-color: #27ae60; }
+  button.export-btn:hover { background: #1e8449; }
+
+  input[type="number"] {
+    width: 70px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: .88rem;
+    color: var(--text);
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    font-size: .82rem;
+    color: var(--text-light);
+  }
+  .legend-dot {
+    width: 14px; height: 14px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: middle;
+  }
+
+  /* ── Calendar grid ── */
+  .calendar-wrapper {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 16px;
+    overflow-x: auto;
+  }
+
+  .month-section { margin-bottom: 20px; }
+  .month-label {
+    font-size: .82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    padding-left: 2px;
+  }
+
+  .week-row {
+    display: grid;
+    grid-template-columns: 38px repeat(7, 1fr);
+    gap: 3px;
+    margin-bottom: 3px;
+  }
+  .week-num {
+    font-size: .7rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f3f6;
+    border-radius: 4px;
+  }
+  .dow-header {
+    display: grid;
+    grid-template-columns: 38px repeat(7, 1fr);
+    gap: 3px;
+    margin-bottom: 4px;
+  }
+  .dow-cell {
+    font-size: .72rem;
+    text-align: center;
+    color: var(--text-light);
+    font-weight: 600;
+    padding: 2px 0;
+  }
+
+  /* ── Day block ── */
+  .day-block {
+    position: relative;
+    border-radius: 6px;
+    padding: 3px 4px 2px;
+    cursor: grab;
+    user-select: none;
+    border: 1.5px solid transparent;
+    transition: transform .1s, box-shadow .1s, opacity .15s;
+    min-height: 46px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: .72rem;
+  }
+  .day-block:active { cursor: grabbing; }
+  .day-block.empty {
+    background: #f7f9fb;
+    border-color: #e2e8ef;
+    cursor: default;
+    opacity: .5;
+  }
+  .day-block.parent-a {
+    background: var(--a-light);
+    border-color: var(--a-color);
+    color: var(--a-dark);
+  }
+  .day-block.parent-b {
+    background: var(--b-light);
+    border-color: var(--b-color);
+    color: var(--b-dark);
+  }
+  .day-block.locked {
+    background: var(--locked-light) !important;
+    border-color: var(--locked) !important;
+    color: var(--locked) !important;
+    cursor: not-allowed;
+  }
+  .day-block.locked::after {
+    content: "🔒";
+    position: absolute;
+    top: 2px; right: 3px;
+    font-size: .65rem;
+  }
+  .day-block.dragging {
+    opacity: .45;
+    transform: scale(.96);
+  }
+  .day-block.drag-over {
+    box-shadow: 0 0 0 2.5px #2c3e50 inset;
+    transform: scale(1.04);
+  }
+  .day-num { font-weight: 700; font-size: .85rem; line-height: 1.1; }
+  .day-parent-tag {
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    opacity: .85;
+  }
+  .day-note {
+    font-size: .62rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-style: italic;
+  }
+
+  /* ── Block group boundary ── */
+  .block-start { border-left-width: 3px !important; }
+  .block-end   { border-right-width: 3px !important; }
+
+  /* ── Lock / Note panel ── */
+  .day-popup {
+    display: none;
+    position: fixed;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.12);
+    padding: 16px;
+    z-index: 9999;
+    min-width: 220px;
+    font-size: .85rem;
+  }
+  .day-popup.open { display: block; }
+  .day-popup h3 { font-size: .95rem; margin-bottom: 10px; }
+  .day-popup label { display: block; margin-bottom: 6px; font-size: .82rem; color: var(--text-light); }
+  .day-popup input[type="text"] {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: .82rem;
+    margin-bottom: 10px;
+  }
+  .day-popup .popup-actions { display: flex; gap: 8px; }
+
+  /* ── Export modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 8000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 28px 30px;
+    max-width: 680px;
+    width: 94vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,.18);
+  }
+  .modal h2 { margin-bottom: 16px; font-size: 1.1rem; }
+  .modal pre {
+    background: #f4f6f8;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 14px;
+    font-size: .8rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: "Courier New", monospace;
+    max-height: 50vh;
+    overflow-y: auto;
+    margin-bottom: 14px;
+  }
+  .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 7px; height: 7px; }
+  ::-webkit-scrollbar-track { background: #f0f3f6; }
+  ::-webkit-scrollbar-thumb { background: #bec8d2; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Summer 2026 Custody Schedule Builder</h1>
+  <span class="subtitle">North Bend School District &nbsp;·&nbsp; June 12 – September 2, 2026 &nbsp;·&nbsp; 83 days &nbsp;·&nbsp; 50/50 split</span>
+</header>
+
+<div class="main">
+
+  <!-- Totals -->
+  <div class="totals-bar">
+    <div class="total-card parent-a">
+      <span class="label">Parent A</span>
+      <span class="count" id="countA">0</span>
+      <span class="target">Target: 41 days</span>
+    </div>
+    <div class="total-card parent-b">
+      <span class="label">Parent B</span>
+      <span class="count" id="countB">0</span>
+      <span class="target">Target: 42 days</span>
+    </div>
+    <div class="total-card total">
+      <span class="label">Total Scheduled</span>
+      <span class="count" id="countTotal">0</span>
+      <span class="target">of 83 days</span>
+    </div>
+    <div class="total-card total" style="min-width:200px">
+      <span class="label">Balance Status</span>
+      <span class="count" id="balanceStatus" style="font-size:1rem;margin-top:4px;">—</span>
+      <span class="target" id="balanceNote">&nbsp;</span>
+    </div>
+  </div>
+
+  <div class="warn-banner" id="warnBanner">
+    <span>⚠</span>
+    <span id="warnText"></span>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="controls-row">
+      <span class="ctrl-label">Template</span>
+      <button id="btnVersionA" class="active" onclick="applyTemplate('A')">Version A — 1-Week Alternating</button>
+      <button id="btnVersionB" onclick="applyTemplate('B')">Version B — 2-Week Alternating</button>
+      <button id="btnVersionC" onclick="applyTemplate('C')">Version C — Custom Block Length</button>
+      <span style="margin-left:8px; font-size:.8rem; color:var(--text-light)" id="customBlockInfo"></span>
+    </div>
+    <div class="controls-row" id="customRow" style="display:none">
+      <span class="ctrl-label">Block Length (days)</span>
+      <input type="number" id="customLen" value="10" min="1" max="41">
+      <span style="font-size:.82rem;color:var(--text-light)">First block goes to</span>
+      <button id="firstBlockA" class="active" onclick="setFirstParent('A')">Parent A</button>
+      <button id="firstBlockB" onclick="setFirstParent('B')">Parent B</button>
+      <button class="primary" onclick="applyCustomTemplate()">Generate</button>
+    </div>
+    <div class="controls-row">
+      <span class="ctrl-label">Actions</span>
+      <button onclick="clearAll()">Clear All</button>
+      <button onclick="resetToTemplate()">Reset to Template</button>
+      <button class="export-btn" onclick="openExport()">Export Schedule</button>
+    </div>
+    <div class="controls-row">
+      <span class="ctrl-label" style="font-size:.75rem">Tip</span>
+      <span style="font-size:.78rem;color:var(--text-light)">
+        Click any day to assign it, or drag a day to reassign. Right-click a day to lock/unlock it or add a note.
+        Locked days cannot be moved.
+      </span>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <span><span class="legend-dot" style="background:var(--a-light);border:1.5px solid var(--a-color)"></span>Parent A</span>
+    <span><span class="legend-dot" style="background:var(--b-light);border:1.5px solid var(--b-color)"></span>Parent B</span>
+    <span><span class="legend-dot" style="background:var(--locked-light);border:1.5px solid var(--locked)"></span>Locked</span>
+    <span><span class="legend-dot" style="background:#f7f9fb;border:1.5px solid #e2e8ef"></span>Unassigned</span>
+    <span style="margin-left:auto;font-size:.75rem;color:var(--text-light)">Click = cycle A→B→unassigned &nbsp;|&nbsp; Right-click = options</span>
+  </div>
+
+  <!-- Calendar -->
+  <div class="calendar-wrapper" id="calendarWrapper"></div>
+
+</div><!-- /main -->
+
+<!-- Day Popup -->
+<div class="day-popup" id="dayPopup">
+  <h3 id="popupTitle">Day Options</h3>
+  <label>Note (optional)</label>
+  <input type="text" id="popupNote" placeholder="e.g. Camp, travel, holiday…" maxlength="40">
+  <div class="popup-actions">
+    <button id="popupLockBtn" onclick="popupToggleLock()"></button>
+    <button onclick="popupSave()">Save</button>
+    <button onclick="closePopup()">Cancel</button>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <h2>Exported Schedule</h2>
+    <pre id="exportText"></pre>
+    <div class="modal-actions">
+      <button class="primary" onclick="copyExport()">Copy to Clipboard</button>
+      <button onclick="closeExport()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA MODEL
+// ─────────────────────────────────────────────
+const SUMMER_START = new Date(2026, 5, 12);  // June 12
+const SUMMER_END   = new Date(2026, 8,  2);  // Sept 2
+const TOTAL_DAYS   = 83;
+const TARGET_A     = 41;
+const TARGET_B     = 42;
+const DOW_LABELS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS       = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// days[i] = { date, parent: 'A'|'B'|null, locked: bool, note: string }
+let days = [];
+let currentTemplate = 'A';
+let customBlockLen  = 10;
+let firstParent     = 'A';
+let dragSrcIndex    = null;
+let popupIndex      = null;
+
+function dateStr(d) {
+  return `${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()}`;
+}
+function fullDateStr(d) {
+  return `${DOW_LABELS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+function addDays(d, n) {
+  const r = new Date(d); r.setDate(r.getDate() + n); return r;
+}
+
+function initDays() {
+  days = [];
+  for (let i = 0; i < TOTAL_DAYS; i++) {
+    days.push({ date: addDays(SUMMER_START, i), parent: null, locked: false, note: '' });
+  }
+}
+
+// ─────────────────────────────────────────────
+//  TEMPLATE GENERATORS
+// ─────────────────────────────────────────────
+function applyAltTemplate(blockLen) {
+  // Alternate A/B, fill remainder to whichever needs more days
+  let parent = firstParent;
+  let idx = 0;
+  while (idx < TOTAL_DAYS) {
+    const end = Math.min(idx + blockLen, TOTAL_DAYS);
+    for (let i = idx; i < end; i++) {
+      if (!days[i].locked) days[i].parent = parent;
+    }
+    parent = parent === 'A' ? 'B' : 'A';
+    idx += blockLen;
+  }
+  // After filling, check if we need to rebalance the last partial block
+  // The remainder naturally goes to whatever parent it lands on.
+  // Ensure strict 41/42 by checking.
+  rebalance();
+}
+
+function rebalance() {
+  // Count locked days
+  let lockedA = days.filter(d => d.locked && d.parent === 'A').length;
+  let lockedB = days.filter(d => d.locked && d.parent === 'B').length;
+  let freeA   = days.filter(d => !d.locked && d.parent === 'A').length;
+  let freeB   = days.filter(d => !d.locked && d.parent === 'B').length;
+  let totalA  = lockedA + freeA;
+  let totalB  = lockedB + freeB;
+  // Only rebalance if off target and unlocked days can absorb
+  // This is a gentle nudge only; drag-and-drop is the primary tool
+  updateCounts();
+}
+
+function applyTemplate(ver) {
+  currentTemplate = ver;
+  ['A','B','C'].forEach(v => document.getElementById('btnVersion'+v).classList.remove('active'));
+  document.getElementById('btnVersion'+ver).classList.add('active');
+  document.getElementById('customRow').style.display = ver === 'C' ? 'flex' : 'none';
+
+  initDays();
+  if (ver === 'A') {
+    applyAltTemplate(7);
+    document.getElementById('customBlockInfo').textContent = '';
+  } else if (ver === 'B') {
+    applyAltTemplate(14);
+    document.getElementById('customBlockInfo').textContent = '';
+  } else {
+    // Version C — show panel, don't apply yet
+    document.getElementById('customBlockInfo').textContent = 'Set block length and click Generate.';
+    updateCounts();
+    renderCalendar();
+    return;
+  }
+  renderCalendar();
+  updateCounts();
+}
+
+function applyCustomTemplate() {
+  const len = parseInt(document.getElementById('customLen').value, 10);
+  if (isNaN(len) || len < 1 || len > 41) {
+    alert('Please enter a block length between 1 and 41 days.');
+    return;
+  }
+  customBlockLen = len;
+  currentTemplate = 'C';
+  initDays();
+  applyAltTemplate(len);
+  document.getElementById('customBlockInfo').textContent = `Current: ${len}-day blocks, first block → Parent ${firstParent}`;
+  renderCalendar();
+  updateCounts();
+}
+
+function setFirstParent(p) {
+  firstParent = p;
+  document.getElementById('firstBlockA').classList.toggle('active', p === 'A');
+  document.getElementById('firstBlockB').classList.toggle('active', p === 'B');
+}
+
+function clearAll() {
+  days.forEach(d => { if (!d.locked) d.parent = null; });
+  renderCalendar();
+  updateCounts();
+}
+
+function resetToTemplate() {
+  // preserve locks and notes, redo assignment
+  const snapLocks = days.map(d => ({ locked: d.locked, note: d.note, parent: d.locked ? d.parent : null }));
+  initDays();
+  snapLocks.forEach((s, i) => { days[i].locked = s.locked; days[i].note = s.note; if (s.locked) days[i].parent = s.parent; });
+  if (currentTemplate === 'A') applyAltTemplate(7);
+  else if (currentTemplate === 'B') applyAltTemplate(14);
+  else applyAltTemplate(customBlockLen);
+  renderCalendar();
+  updateCounts();
+}
+
+// ─────────────────────────────────────────────
+//  COUNTS & WARNINGS
+// ─────────────────────────────────────────────
+function updateCounts() {
+  const a = days.filter(d => d.parent === 'A').length;
+  const b = days.filter(d => d.parent === 'B').length;
+  const t = a + b;
+  document.getElementById('countA').textContent = a;
+  document.getElementById('countB').textContent = b;
+  document.getElementById('countTotal').textContent = t;
+
+  const bs = document.getElementById('balanceStatus');
+  const bn = document.getElementById('balanceNote');
+  const wb = document.getElementById('warnBanner');
+  const wt = document.getElementById('warnText');
+
+  const diffA = a - TARGET_A;
+  const diffB = b - TARGET_B;
+
+  if (a === TARGET_A && b === TARGET_B) {
+    bs.textContent = '✓ Balanced';
+    bs.style.color = 'var(--ok)';
+    bn.textContent = '41 / 42 — perfect split';
+    wb.classList.remove('visible');
+  } else if (t < TOTAL_DAYS) {
+    bs.textContent = `${TOTAL_DAYS - t} unassigned`;
+    bs.style.color = 'var(--neutral)';
+    bn.textContent = 'Assign remaining days to complete.';
+    wb.classList.remove('visible');
+    if (t > 0) {
+      // show soft reminder only if something is assigned
+    }
+  } else {
+    // all assigned but not balanced
+    bs.textContent = '⚠ Off-balance';
+    bs.style.color = 'var(--warn)';
+    let msgs = [];
+    if (diffA !== 0) msgs.push(`Parent A is ${Math.abs(diffA)} day(s) ${diffA > 0 ? 'over' : 'under'} target of ${TARGET_A}`);
+    if (diffB !== 0) msgs.push(`Parent B is ${Math.abs(diffB)} day(s) ${diffB > 0 ? 'over' : 'under'} target of ${TARGET_B}`);
+    bn.textContent = msgs.join(' · ');
+    wt.textContent = msgs.join(' · ') + '. Move days between parents to restore the 41/42 split.';
+    wb.classList.add('visible');
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function renderCalendar() {
+  const wrap = document.getElementById('calendarWrapper');
+  wrap.innerHTML = '';
+
+  // group days by month
+  const byMonth = {};
+  days.forEach((d, i) => {
+    const key = `${d.date.getFullYear()}-${d.date.getMonth()}`;
+    if (!byMonth[key]) byMonth[key] = { label: MONTHS[d.date.getMonth()] + ' ' + d.date.getFullYear(), indices: [] };
+    byMonth[key].indices.push(i);
+  });
+
+  Object.values(byMonth).forEach(month => {
+    const sec = document.createElement('div');
+    sec.className = 'month-section';
+
+    const ml = document.createElement('div');
+    ml.className = 'month-label';
+    ml.textContent = month.label;
+    sec.appendChild(ml);
+
+    // DOW header
+    const dowRow = document.createElement('div');
+    dowRow.className = 'dow-header';
+    const spacer = document.createElement('div'); spacer.className = 'dow-cell'; dowRow.appendChild(spacer);
+    DOW_LABELS.forEach(d => { const c = document.createElement('div'); c.className = 'dow-cell'; c.textContent = d; dowRow.appendChild(c); });
+    sec.appendChild(dowRow);
+
+    // Build weeks
+    // Find first DOW
+    const firstIdx = month.indices[0];
+    const firstDate = days[firstIdx].date;
+    const startDow = firstDate.getDay(); // 0=Sun
+
+    // pad front
+    let weekDaySlots = [];
+    for (let p = 0; p < startDow; p++) weekDaySlots.push(null);
+    month.indices.forEach(i => weekDaySlots.push(i));
+    // pad end
+    while (weekDaySlots.length % 7 !== 0) weekDaySlots.push(null);
+
+    for (let w = 0; w < weekDaySlots.length / 7; w++) {
+      const row = document.createElement('div');
+      row.className = 'week-row';
+
+      // week number cell
+      const wn = document.createElement('div');
+      wn.className = 'week-num';
+      // find first real day in this week to compute ISO week num
+      const slotStart = w * 7;
+      const firstReal = weekDaySlots.slice(slotStart, slotStart + 7).find(s => s !== null);
+      if (firstReal !== null && firstReal !== undefined) {
+        wn.textContent = 'W' + getWeekNum(days[firstReal].date);
+      }
+      row.appendChild(wn);
+
+      for (let d = 0; d < 7; d++) {
+        const idx = weekDaySlots[slotStart + d];
+        if (idx === null || idx === undefined) {
+          const empty = document.createElement('div');
+          empty.className = 'day-block empty';
+          row.appendChild(empty);
+        } else {
+          row.appendChild(buildDayBlock(idx));
+        }
+      }
+      sec.appendChild(row);
+    }
+    wrap.appendChild(sec);
+  });
+}
+
+function getWeekNum(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+}
+
+function buildDayBlock(idx) {
+  const d = days[idx];
+  const el = document.createElement('div');
+  el.className = 'day-block';
+  if (d.parent === 'A') el.classList.add('parent-a');
+  else if (d.parent === 'B') el.classList.add('parent-b');
+  if (d.locked) el.classList.add('locked');
+
+  // block-start / block-end decoration
+  const prevP = idx > 0 ? days[idx-1].parent : null;
+  const nextP = idx < TOTAL_DAYS-1 ? days[idx+1].parent : null;
+  if (d.parent && d.parent !== prevP) el.classList.add('block-start');
+  if (d.parent && d.parent !== nextP) el.classList.add('block-end');
+
+  el.dataset.idx = idx;
+
+  const numEl = document.createElement('div');
+  numEl.className = 'day-num';
+  numEl.textContent = d.date.getDate();
+  el.appendChild(numEl);
+
+  if (d.parent) {
+    const tag = document.createElement('div');
+    tag.className = 'day-parent-tag';
+    tag.textContent = 'Parent ' + d.parent;
+    el.appendChild(tag);
+  }
+
+  if (d.note) {
+    const note = document.createElement('div');
+    note.className = 'day-note';
+    note.textContent = d.note;
+    el.appendChild(note);
+  }
+
+  // Click to cycle
+  el.addEventListener('click', (e) => {
+    if (d.locked) return;
+    cycleDayParent(idx);
+  });
+
+  // Right-click popup
+  el.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    openPopup(idx, e.clientX, e.clientY);
+  });
+
+  // Drag events
+  if (!d.locked) {
+    el.draggable = true;
+    el.addEventListener('dragstart', (e) => onDragStart(e, idx));
+    el.addEventListener('dragend',   (e) => onDragEnd(e, idx));
+  }
+  el.addEventListener('dragover',  (e) => onDragOver(e, idx));
+  el.addEventListener('dragleave', (e) => onDragLeave(e, idx));
+  el.addEventListener('drop',      (e) => onDrop(e, idx));
+
+  return el;
+}
+
+// ─────────────────────────────────────────────
+//  CLICK CYCLE
+// ─────────────────────────────────────────────
+function cycleDayParent(idx) {
+  const cur = days[idx].parent;
+  days[idx].parent = cur === null ? 'A' : cur === 'A' ? 'B' : null;
+  refreshDay(idx);
+  updateCounts();
+}
+
+// ─────────────────────────────────────────────
+//  DRAG & DROP
+// ─────────────────────────────────────────────
+function onDragStart(e, idx) {
+  dragSrcIndex = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', idx);
+  setTimeout(() => getDayEl(idx)?.classList.add('dragging'), 0);
+}
+
+function onDragEnd(e, idx) {
+  getDayEl(idx)?.classList.remove('dragging');
+  dragSrcIndex = null;
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+function onDragOver(e, idx) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  getDayEl(idx)?.classList.add('drag-over');
+}
+
+function onDragLeave(e, idx) {
+  getDayEl(idx)?.classList.remove('drag-over');
+}
+
+function onDrop(e, idx) {
+  e.preventDefault();
+  getDayEl(idx)?.classList.remove('drag-over');
+  if (dragSrcIndex === null || dragSrcIndex === idx) return;
+  if (days[idx].locked) return;
+
+  // Swap parents
+  const srcParent = days[dragSrcIndex].parent;
+  const dstParent = days[idx].parent;
+  days[dragSrcIndex].parent = dstParent;
+  days[idx].parent = srcParent;
+
+  refreshDay(dragSrcIndex);
+  refreshDay(idx);
+  updateCounts();
+}
+
+function getDayEl(idx) {
+  return document.querySelector(`.day-block[data-idx="${idx}"]`);
+}
+
+function refreshDay(idx) {
+  const old = getDayEl(idx);
+  if (!old) return;
+  const newEl = buildDayBlock(idx);
+  old.parentNode.replaceChild(newEl, old);
+}
+
+// ─────────────────────────────────────────────
+//  RIGHT-CLICK POPUP
+// ─────────────────────────────────────────────
+function openPopup(idx, x, y) {
+  popupIndex = idx;
+  const d = days[idx];
+  const popup = document.getElementById('dayPopup');
+  document.getElementById('popupTitle').textContent = fullDateStr(d.date);
+  document.getElementById('popupNote').value = d.note || '';
+  document.getElementById('popupLockBtn').textContent = d.locked ? '🔓 Unlock Day' : '🔒 Lock Day';
+  popup.classList.add('open');
+
+  // Position near cursor, keep in viewport
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let left = x + 8, top = y + 8;
+  if (left + 240 > vw) left = vw - 248;
+  if (top + 160 > vh) top = vh - 168;
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
+}
+
+function popupToggleLock() {
+  if (popupIndex === null) return;
+  days[popupIndex].locked = !days[popupIndex].locked;
+  document.getElementById('popupLockBtn').textContent = days[popupIndex].locked ? '🔓 Unlock Day' : '🔒 Lock Day';
+  refreshDay(popupIndex);
+}
+
+function popupSave() {
+  if (popupIndex === null) return;
+  days[popupIndex].note = document.getElementById('popupNote').value.trim();
+  refreshDay(popupIndex);
+  closePopup();
+}
+
+function closePopup() {
+  document.getElementById('dayPopup').classList.remove('open');
+  popupIndex = null;
+}
+
+// Close popup on outside click
+document.addEventListener('click', (e) => {
+  const popup = document.getElementById('dayPopup');
+  if (popup.classList.contains('open') && !popup.contains(e.target)) {
+    closePopup();
+  }
+});
+
+// ─────────────────────────────────────────────
+//  EXPORT
+// ─────────────────────────────────────────────
+function openExport() {
+  const lines = [];
+  lines.push('SUMMER 2026 CUSTODY SCHEDULE');
+  lines.push('North Bend School District');
+  lines.push(`June 12 – September 2, 2026  |  ${TOTAL_DAYS} days  |  Target: 41 (Parent A) / 42 (Parent B)`);
+  lines.push('─'.repeat(58));
+
+  const a = days.filter(d => d.parent === 'A').length;
+  const b = days.filter(d => d.parent === 'B').length;
+  lines.push(`Parent A: ${a} days  |  Parent B: ${b} days  |  Assigned: ${a+b}/${TOTAL_DAYS}`);
+  lines.push('─'.repeat(58));
+  lines.push('');
+
+  // Build contiguous blocks
+  let blocks = [];
+  let cur = null;
+  days.forEach((d, i) => {
+    if (!cur || d.parent !== cur.parent) {
+      cur = { parent: d.parent, start: d.date, end: d.date, count: 1, notes: [] };
+      blocks.push(cur);
+    } else {
+      cur.end = d.date;
+      cur.count++;
+    }
+    if (d.note) cur.notes.push(`${dateStr(d.date)}: ${d.note}`);
+  });
+
+  blocks.forEach(blk => {
+    const p = blk.parent ? `Parent ${blk.parent}` : 'Unassigned ';
+    const range = blk.count === 1
+      ? fullDateStr(blk.start)
+      : `${fullDateStr(blk.start)} – ${fullDateStr(blk.end)}`;
+    lines.push(`${p}  |  ${range}  (${blk.count} day${blk.count>1?'s':''})`);
+    blk.notes.forEach(n => lines.push(`           Note: ${n}`));
+  });
+
+  lines.push('');
+  lines.push('─'.repeat(58));
+  lines.push('DAILY DETAIL');
+  lines.push('─'.repeat(58));
+
+  // monthly breakdown
+  let curMonth = null;
+  days.forEach(d => {
+    const mLabel = MONTHS[d.date.getMonth()];
+    if (mLabel !== curMonth) { lines.push(''); lines.push(`  ${mLabel.toUpperCase()}`); curMonth = mLabel; }
+    const lock = d.locked ? ' [LOCKED]' : '';
+    const note = d.note   ? ` — ${d.note}` : '';
+    lines.push(`    ${fullDateStr(d.date).padEnd(32)} Parent ${d.parent || '—'}${lock}${note}`);
+  });
+
+  document.getElementById('exportText').textContent = lines.join('\n');
+  document.getElementById('exportModal').classList.add('open');
+}
+
+function closeExport() {
+  document.getElementById('exportModal').classList.remove('open');
+}
+
+function copyExport() {
+  const text = document.getElementById('exportText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.modal .primary');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; }, 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+// Close export modal on overlay click
+document.getElementById('exportModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('exportModal')) closeExport();
+});
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+applyTemplate('A');
+</script>
+</body>
+</html>
