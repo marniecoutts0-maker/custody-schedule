@@ -1,4 +1,202 @@
-# Custody Schedule Builder — User Guide
+# Legal Ease — Custody Schedule Builder
+
+---
+
+## 📋 Contents
+
+1. [About Legal Ease](#about-legal-ease) — Business Use Case
+2. [Quick Start Guide](#quick-start-guide) — Kid-Friendly Quick Card
+3. [Detailed User Guide](#detailed-user-guide) — Full Job Aid
+
+---
+
+---
+
+## About Legal Ease
+
+> *Understand what you're agreeing to — before you agree to it.*
+
+Legal Ease helps you build custody schedules, organize required documents, and securely share everything with your attorney — without the stress of email and guesswork.
+
+---
+
+### The Problem
+
+Navigating custody and legal processes can feel overwhelming:
+
+- Documents scattered across email and text
+- Unclear expectations from attorneys
+- Confusing custody schedules
+- Risk of missing something important
+
+**Most tools are built for attorneys — not for you.**
+
+---
+
+### The Solution
+
+Legal Ease gives you a calm, structured place to:
+
+- Model parenting plans clearly
+- Track exactly what documents are needed
+- Upload and organize everything in one place
+- Share securely with your attorney
+
+---
+
+### Core Features
+
+**📅 Custody Scenario Builder**
+Create and compare schedules with clear overnight calculations so you understand the real impact of each option.
+
+**✅ Smart Document Checklist**
+Know exactly what's required and what's missing. As you upload documents, your checklist updates automatically.
+
+**🔐 Secure Document Sharing**
+Send one clean, secure link to your attorney instead of juggling email attachments.
+
+---
+
+### Who It Helps
+
+**Clients**
+- Stay organized and confident
+- Reduce stress and uncertainty
+
+**Attorneys**
+- Receive complete, structured information
+- Spend less time chasing documents
+
+**Mediators**
+- Work from clear, thoughtful proposals
+
+---
+
+### Security & Trust
+
+- Secure access and private document storage
+- Shareable links with optional protection
+- Designed for sensitive, real-life situations
+
+---
+
+### Important Note
+
+> Legal Ease is not a legal service and does not provide legal advice.
+> It is a tool for organization, clarity, and preparation.
+
+---
+
+### Get Started
+
+👉 [Build your first schedule — Summer 2026](https://custody-schedule.onrender.com/)
+👉 [Build your first schedule — School Year 2025–26](https://custody-schedule.onrender.com/school-year.html)
+
+---
+
+---
+
+## Quick Start Guide
+
+### CUSTODY SCHEDULE BUILDER — KID-FRIENDLY QUICK CARD
+
+---
+
+**OPEN THE PAGE**
+
+| Schedule | Link |
+|---|---|
+| School Year | https://custody-schedule.onrender.com/school-year.html |
+| Summer | https://custody-schedule.onrender.com/ |
+
+You can switch between them using the menu at the top.
+
+---
+
+**PICK A STARTING PLAN**
+
+Choose a plan that fills in the calendar for you.
+
+- **School Year choices:** Option 1, Option 2, Week-On/Week-Off, or Blank
+- **Summer choices:** 1-week blocks, 2-week blocks, or choose your own block size
+
+---
+
+**CHANGE A DAY**
+
+Tap or click a day to switch who has it.
+It goes in this order: **Robin → Isaac → Unassigned → back to Robin.**
+
+- On a computer: click and drag one day onto another to swap them
+- On a phone or tablet: press and hold a day until it dims, then slide it to another day
+
+---
+
+**LOCK A DAY**
+
+If you want a day to stay the same, lock it.
+Right-click (computer) or press and hold (phone/tablet), then choose **"Lock."**
+Locked days cannot be changed by accident.
+
+---
+
+**ADD A NOTE**
+
+You can write a small note on any day.
+Right-click or press and hold, then choose **"Add Note."**
+Examples: Camp, Travel, Holiday, Grandma's House.
+
+---
+
+**CHECK THE TOTALS**
+
+At the top you can see:
+
+| | |
+|---|---|
+| Robin | how many days Robin has |
+| Isaac | how many days Isaac has |
+| Total Assigned | how many days are filled |
+| Split | the percentage between them |
+
+If you want the full 365-day total, keep both pages open at the same time.
+
+---
+
+**USE THE BUTTONS**
+
+| Button | What it does |
+|---|---|
+| Clear All | Erase everything (locked days stay) |
+| Reset to Template | Go back to the starting plan but keep locked days |
+| Export Schedule | Shows a text version you can copy and save |
+
+---
+
+**COLORS**
+
+| Color | Meaning |
+|---|---|
+| 🟦 Blue | Robin |
+| 🟧 Orange | Isaac |
+| ⬜ Grey | Unassigned |
+| 🔒 Dark grey | Locked |
+| Gold border | School break |
+| Green border | No-school day |
+
+---
+
+**IF SOMETHING LOOKS WEIRD**
+
+- **Reset to Template** to fix the pattern
+- **Clear All** to start over
+- If dragging doesn't work on a phone, press and hold a little longer
+
+---
+
+---
+
+## Detailed User Guide
 
 **North Bend School District · 3rd Grade · 2025–2026**
 
@@ -7,7 +205,7 @@ No login required. Works in any web browser on a computer, phone, or tablet.
 
 ---
 
-## 🔗 Quick Links
+### 🔗 Quick Links
 
 | Tool | URL |
 |---|---|
@@ -17,8 +215,6 @@ No login required. Works in any web browser on a computer, phone, or tablet.
 Use the navigation bar at the top of each page to switch between the two tools.
 
 ---
-
-## How to Use Each Tool
 
 ### Step 1 — Choose a Template
 
