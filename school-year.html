@@ -930,9 +930,12 @@ function buildDayBlock(idx) {
 
   // Drag
   if (!d.locked) {
+    // Drag events
+  if (!d.locked) {
     el.draggable = true;
     el.addEventListener('dragstart', (e) => onDragStart(e, idx));
     el.addEventListener('dragend',   (e) => onDragEnd(e, idx));
+    el.addEventListener('touchstart', (e) => onTouchDragStart(e, idx), { passive: true });
   }
   el.addEventListener('dragover',  (e) => onDragOver(e, idx));
   el.addEventListener('dragleave', (e) => onDragLeave(e, idx));
@@ -1117,6 +1120,58 @@ function copyExport() {
 }
 document.getElementById('exportModal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('exportModal')) closeExport();
+});
+
+// ─────────────────────────────────────────────
+//  TOUCH DRAG SUPPORT
+// ─────────────────────────────────────────────
+let touchSrcIndex  = null;
+let touchOverIndex = null;
+let touchMoved     = false;
+let touchStartX    = 0, touchStartY = 0;
+
+function onTouchDragStart(e, idx) {
+  touchSrcIndex = idx;
+  touchMoved    = false;
+  touchStartX   = e.touches[0].clientX;
+  touchStartY   = e.touches[0].clientY;
+}
+
+document.addEventListener('touchmove', (e) => {
+  if (touchSrcIndex === null) return;
+  const t = e.touches[0];
+  if (!touchMoved) {
+    if (Math.abs(t.clientX - touchStartX) < 8 && Math.abs(t.clientY - touchStartY) < 8) return;
+    touchMoved = true;
+    getDayEl(touchSrcIndex)?.classList.add('dragging');
+  }
+  e.preventDefault();
+  const under = document.elementFromPoint(t.clientX, t.clientY);
+  const block = under?.closest?.('.day-block[data-idx]');
+  const newOver = block ? parseInt(block.dataset.idx) : null;
+  if (touchOverIndex !== newOver) {
+    if (touchOverIndex !== null) getDayEl(touchOverIndex)?.classList.remove('drag-over');
+    touchOverIndex = newOver;
+    if (newOver !== null && newOver !== touchSrcIndex) getDayEl(newOver)?.classList.add('drag-over');
+  }
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+  if (touchSrcIndex === null) return;
+  getDayEl(touchSrcIndex)?.classList.remove('dragging');
+  if (touchOverIndex !== null) getDayEl(touchOverIndex)?.classList.remove('drag-over');
+  if (touchMoved && touchOverIndex !== null && touchOverIndex !== touchSrcIndex && !days[touchOverIndex].locked) {
+    const srcP = days[touchSrcIndex].parent;
+    const dstP = days[touchOverIndex].parent;
+    days[touchSrcIndex].parent = dstP;
+    days[touchOverIndex].parent = srcP;
+    refreshDay(touchSrcIndex);
+    refreshDay(touchOverIndex);
+    updateCounts();
+  }
+  touchSrcIndex  = null;
+  touchOverIndex = null;
+  touchMoved     = false;
 });
 
 // ─────────────────────────────────────────────
