@@ -332,6 +332,45 @@
   ::-webkit-scrollbar { width: 7px; height: 7px; }
   ::-webkit-scrollbar-track { background: #f0f3f6; }
   ::-webkit-scrollbar-thumb { background: #bec8d2; border-radius: 4px; }
+
+  /* ── Full Year Summary ── */
+  .year-summary-section {
+    margin-bottom: 18px;
+    border: 1.5px dashed #8e9bb5;
+    border-radius: 10px;
+    background: #eef0f8;
+    padding: 12px 16px 14px;
+  }
+  .year-summary-heading {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #4a5578;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .year-summary-heading::after { content: ''; flex: 1; height: 1px; background: #8e9bb5; }
+  .year-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+  .year-card {
+    flex: 1 1 150px;
+    background: #fff;
+    border: 1px solid #b0b8d0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .year-card .ylabel { font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: #7a8499; }
+  .year-card .ycount { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+  .year-card .ysub   { font-size: .75rem; color: #7a8499; }
+  .year-card.yr-a .ycount { color: var(--a-dark); }
+  .year-card.yr-b .ycount { color: var(--b-dark); }
+  .year-card.yr-total .ycount { color: #4a5578; }
+  .year-note { font-size: .72rem; color: #7a8499; margin-top: 10px; font-style: italic; }
 </style>
 </head>
 <body>
@@ -370,6 +409,34 @@
       <span class="count" id="balanceStatus" style="font-size:1rem;margin-top:4px;">—</span>
       <span class="target" id="balanceNote">&nbsp;</span>
     </div>
+  </div>
+
+  <!-- Full Year Summary -->
+  <div class="year-summary-section">
+    <div class="year-summary-heading">&#9670; Full Year Summary &mdash; Sept 3, 2025 &ndash; Sept 2, 2026 &mdash; 365 Days Combined</div>
+    <div class="year-bar">
+      <div class="year-card yr-a">
+        <span class="ylabel">Robin &mdash; Full Year</span>
+        <span class="ycount" id="yrCountA">—</span>
+        <span class="ysub" id="yrPctA">days &amp; % of year</span>
+      </div>
+      <div class="year-card yr-b">
+        <span class="ylabel">Isaac &mdash; Full Year</span>
+        <span class="ycount" id="yrCountB">—</span>
+        <span class="ysub" id="yrPctB">days &amp; % of year</span>
+      </div>
+      <div class="year-card yr-total">
+        <span class="ylabel">Combined Total</span>
+        <span class="ycount" id="yrTotal">—</span>
+        <span class="ysub">of 365 days</span>
+      </div>
+      <div class="year-card yr-total" style="min-width:200px">
+        <span class="ylabel">Full Year Split</span>
+        <span class="ycount" id="yrSplit" style="font-size:1.1rem;margin-top:4px;">—</span>
+        <span class="ysub" id="yrSplitNote">&nbsp;</span>
+      </div>
+    </div>
+    <div class="year-note" id="yrNote">Open both schedule pages to see combined totals.</div>
   </div>
 
   <div class="warn-banner" id="warnBanner">
@@ -623,6 +690,47 @@ function updateCounts() {
     bn.textContent = msgs.join(' · ');
     wt.textContent = msgs.join(' · ') + '. Move days between parents to restore the 41/42 split.';
     wb.classList.add('visible');
+  }
+
+  // Save this page's counts and update full-year summary
+  localStorage.setItem('custody_summer', JSON.stringify({ a, b }));
+  updateYearSummary();
+}
+
+function updateYearSummary() {
+  const YEAR_TOTAL = 365;
+  const su = JSON.parse(localStorage.getItem('custody_summer') || '{"a":0,"b":0}');
+  const sy = JSON.parse(localStorage.getItem('custody_school') || 'null');
+
+  const totalA = su.a + (sy ? sy.a : 0);
+  const totalB = su.b + (sy ? sy.b : 0);
+  const total  = totalA + totalB;
+
+  document.getElementById('yrCountA').textContent = totalA;
+  document.getElementById('yrCountB').textContent = totalB;
+  document.getElementById('yrTotal').textContent  = total;
+
+  if (total > 0) {
+    const pA = (totalA / YEAR_TOTAL * 100).toFixed(1);
+    const pB = (totalB / YEAR_TOTAL * 100).toFixed(1);
+    document.getElementById('yrPctA').textContent     = `days (${pA}% of full year)`;
+    document.getElementById('yrPctB').textContent     = `days (${pB}% of full year)`;
+    document.getElementById('yrSplit').textContent    = `${pA}% / ${pB}%`;
+    document.getElementById('yrSplitNote').textContent = `Robin ${totalA} · Isaac ${totalB}`;
+  } else {
+    document.getElementById('yrPctA').textContent     = 'days & % of year';
+    document.getElementById('yrPctB').textContent     = 'days & % of year';
+    document.getElementById('yrSplit').textContent    = '—';
+    document.getElementById('yrSplitNote').textContent = ' ';
+  }
+
+  const note = document.getElementById('yrNote');
+  if (!sy) {
+    note.textContent = '⚠ School year schedule not yet loaded — open that page to include those days.';
+  } else if (total < YEAR_TOTAL) {
+    note.textContent = `${YEAR_TOTAL - total} days still unassigned across both schedules.`;
+  } else {
+    note.textContent = 'All 365 days assigned. Showing combined full-year split.';
   }
 }
 
