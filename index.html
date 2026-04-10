@@ -711,15 +711,15 @@ function updateYearSummary() {
   document.getElementById('yrTotal').textContent  = total;
 
   if (total > 0) {
-    const pA = (totalA / YEAR_TOTAL * 100).toFixed(1);
-    const pB = (totalB / YEAR_TOTAL * 100).toFixed(1);
-    document.getElementById('yrPctA').textContent     = `days (${pA}% of full year)`;
-    document.getElementById('yrPctB').textContent     = `days (${pB}% of full year)`;
+    const pA = (totalA / total * 100).toFixed(1);
+    const pB = (totalB / total * 100).toFixed(1);
+    document.getElementById('yrPctA').textContent     = `days (${pA}% of assigned)`;
+    document.getElementById('yrPctB').textContent     = `days (${pB}% of assigned)`;
     document.getElementById('yrSplit').textContent    = `${pA}% / ${pB}%`;
-    document.getElementById('yrSplitNote').textContent = `Robin ${totalA} · Isaac ${totalB}`;
+    document.getElementById('yrSplitNote').textContent = `Robin ${totalA} · Isaac ${totalB} · of ${total} assigned`;
   } else {
-    document.getElementById('yrPctA').textContent     = 'days & % of year';
-    document.getElementById('yrPctB').textContent     = 'days & % of year';
+    document.getElementById('yrPctA').textContent     = 'days & % of assigned';
+    document.getElementById('yrPctB').textContent     = 'days & % of assigned';
     document.getElementById('yrSplit').textContent    = '—';
     document.getElementById('yrSplitNote').textContent = ' ';
   }
@@ -728,9 +728,9 @@ function updateYearSummary() {
   if (!sy) {
     note.textContent = '⚠ School year schedule not yet loaded — open that page to include those days.';
   } else if (total < YEAR_TOTAL) {
-    note.textContent = `${YEAR_TOTAL - total} days still unassigned across both schedules.`;
+    note.textContent = `${total} of ${YEAR_TOTAL} days assigned across both schedules. Open both pages to see the full picture.`;
   } else {
-    note.textContent = 'All 365 days assigned. Showing combined full-year split.';
+    note.textContent = 'All 365 days assigned. Split shown above is the full-year parenting allocation.';
   }
 }
 
