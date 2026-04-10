@@ -477,6 +477,7 @@
       <span class="ctrl-label">Template</span>
       <button id="btnTemplate1" class="active" onclick="applyTemplate(1)">Option 1 — Robin-Preferred</button>
       <button id="btnTemplate2" onclick="applyTemplate(2)">Option 2 — Alternative Pattern</button>
+      <button id="btnTemplate3" onclick="applyTemplate(3)" style="border-color:#e8912d;color:#b7770d;">Isaac's Proposal — Week On/Off</button>
       <button id="btnTemplate0" onclick="applyTemplate(0)">Blank / Unassigned</button>
     </div>
     <div class="controls-row">
@@ -633,13 +634,27 @@ function initDays() {
 // ─────────────────────────────────────────────
 function applyTemplate(num) {
   currentTemplate = num;
-  [0, 1, 2].forEach(n => document.getElementById('btnTemplate' + n).classList.remove('active'));
+  [0, 1, 2, 3].forEach(n => document.getElementById('btnTemplate' + n).classList.remove('active'));
   document.getElementById('btnTemplate' + num).classList.add('active');
 
   initDays();
   if (num === 1 || num === 2) {
     const pattern = TEMPLATES[num].pattern;
     days.forEach(d => { if (!d.locked) d.parent = pattern[d.date.getDay()]; });
+  } else if (num === 3) {
+    // Week-on / week-off: alternate full weeks Sun–Sat, Robin starts first week
+    // Determine ISO week number relative to school start to alternate
+    days.forEach(d => {
+      if (!d.locked) {
+        // Count full weeks from SCHOOL_START (Sun-anchored)
+        const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+        // Find the Sunday on or before SCHOOL_START
+        const startSunday = new Date(SCHOOL_START);
+        startSunday.setDate(SCHOOL_START.getDate() - SCHOOL_START.getDay());
+        const weekIndex = Math.floor((d.date - startSunday) / msPerWeek);
+        d.parent = weekIndex % 2 === 0 ? 'A' : 'B';
+      }
+    });
   }
 
   renderPatternKey(num);
@@ -664,6 +679,16 @@ function resetToTemplate() {
   if (currentTemplate === 1 || currentTemplate === 2) {
     const pattern = TEMPLATES[currentTemplate].pattern;
     days.forEach((d, i) => { if (!d.locked) d.parent = pattern[d.date.getDay()]; });
+  } else if (currentTemplate === 3) {
+    const startSunday = new Date(SCHOOL_START);
+    startSunday.setDate(SCHOOL_START.getDate() - SCHOOL_START.getDay());
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    days.forEach(d => {
+      if (!d.locked) {
+        const weekIndex = Math.floor((d.date - startSunday) / msPerWeek);
+        d.parent = weekIndex % 2 === 0 ? 'A' : 'B';
+      }
+    });
   }
   renderCalendar();
   updateCounts();
@@ -676,6 +701,15 @@ function renderPatternKey(num) {
   const el = document.getElementById('patternKey');
   if (!num) {
     el.innerHTML = '<h3>Pattern</h3><span style="color:var(--text-light);font-size:.82rem">No template selected — all days unassigned.</span>';
+    return;
+  }
+  if (num === 3) {
+    el.innerHTML = `<h3>Weekly Pattern — Isaac's Proposal: Week On / Week Off (50/50)</h3>
+      <div style="font-size:.82rem;color:var(--text-light);margin-top:4px;">
+        Alternates full weeks (Sun–Sat): <strong style="color:var(--a-dark)">Robin's week</strong> then 
+        <strong style="color:var(--b-dark)">Isaac's week</strong>, repeating through the school year.
+        Produces an approximately <strong>50/50 split</strong>.
+      </div>`;
     return;
   }
   const pattern = TEMPLATES[num].pattern;
