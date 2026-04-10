@@ -5,7 +5,7 @@
 ## 📋 Contents
 
 1. [About Legal Ease](#about-legal-ease) — Business Use Case
-2. [Quick Start Guide](#quick-start-guide) — Kid-Friendly Quick Card
+2. [Quick Start Guide](#quick-start-guide) — User-Friendly Quick Card
 3. [Detailed User Guide](#detailed-user-guide) — Full Job Aid
 
 ---
@@ -98,7 +98,7 @@ Send one clean, secure link to your attorney instead of juggling email attachmen
 
 ## Quick Start Guide
 
-### CUSTODY SCHEDULE BUILDER — KID-FRIENDLY QUICK CARD
+### CUSTODY SCHEDULE BUILDER — USER-FRIENDLY QUICK CARD
 
 ---
 
