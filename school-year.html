@@ -553,8 +553,10 @@ const MONTHS     = ['January','February','March','April','May','June',
 // Weekly patterns indexed by day-of-week (0 = Sunday)
 // A = Robin, B = Isaac
 const TEMPLATES = {
+  0: { name: 'Blank / Unassigned', pattern: null },
   1: { name: 'Option 1 — Robin-Preferred',  pattern: ['A','A','A','B','A','B','B'] },
   2: { name: 'Option 2 — Alternative Pattern', pattern: ['B','A','A','B','A','A','B'] },
+  3: { name: "Isaac's Proposal — Week On/Off", pattern: null },
   4: {
     name: '2-2-5 School Year',
     // 14-day cycle: Mon/Tue A, Wed/Thu B, Fri-Sun alternate weekends
