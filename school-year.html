@@ -613,8 +613,30 @@ function fullDateStr(d) {
 }
 
 // ─────────────────────────────────────────────
+
 //  STATE
 // ─────────────────────────────────────────────
+let days = [];
+let currentTemplate = 1;
+let dragSrcIndex = null;
+let popupIndex = null;
+
+function initDays() {
+  days = [];
+  for (let i = 0; i < TOTAL_DAYS; i++) {
+    const date = addDays(SCHOOL_START, i);
+    const ns = NO_SCHOOL[dateKey(date)] || null;
+    days.push({
+      date,
+      parent:     null,
+      locked:     false,
+      note:       '',
+      noSchool:   !!ns,
+      isBreak:    ns ? ns.isBreak : false,
+      breakLabel: ns ? ns.label   : ''
+    });
+  }
+}
 
 // ─────────────────────────────────────────────
 //  TEMPLATES
