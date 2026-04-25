@@ -478,6 +478,7 @@
       <button id="btnTemplate1" class="active" onclick="applyTemplate(1)">Option 1 — Robin-Preferred</button>
       <button id="btnTemplate2" onclick="applyTemplate(2)">Option 2 — Alternative Pattern</button>
       <button id="btnTemplate3" onclick="applyTemplate(3)" style="border-color:#e8912d;color:#b7770d;">Isaac's Proposal — Week On/Off</button>
+      <button id="btnTemplate4" onclick="applyTemplate(4)" style="border-color:#4a90d9;color:#2471a3;">2-2-5 School Year</button>
       <button id="btnTemplate0" onclick="applyTemplate(0)">Blank / Unassigned</button>
     </div>
     <div class="controls-row">
@@ -553,7 +554,12 @@ const MONTHS     = ['January','February','March','April','May','June',
 // A = Robin, B = Isaac
 const TEMPLATES = {
   1: { name: 'Option 1 — Robin-Preferred',  pattern: ['A','A','A','B','A','B','B'] },
-  2: { name: 'Option 2 — Alternative Pattern', pattern: ['B','A','A','B','A','A','B'] }
+  2: { name: 'Option 2 — Alternative Pattern', pattern: ['B','A','A','B','A','A','B'] },
+  4: {
+    name: '2-2-5 School Year',
+    // 14-day cycle: Mon/Tue A, Wed/Thu B, Fri-Sun alternate weekends
+    pattern: ["A","A","B","B","A","A","A","B","B","A","A","B","B","B"]
+  }
 };
 
 // ─────────────────────────────────────────────
@@ -607,26 +613,36 @@ function fullDateStr(d) {
 // ─────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────
-let days = [];
-let currentTemplate = 1;
-let dragSrcIndex = null;
-let popupIndex   = null;
-
-function initDays() {
-  days = [];
-  for (let i = 0; i < TOTAL_DAYS; i++) {
-    const date = addDays(SCHOOL_START, i);
-    const ns = NO_SCHOOL[dateKey(date)] || null;
-    days.push({
-      date,
-      parent:     null,
-      locked:     false,
-      note:       '',
-      noSchool:   !!ns,
-      isBreak:    ns ? ns.isBreak : false,
-      breakLabel: ns ? ns.label   : ''
-    });
+  let html = '';
+  if (num === 1 || num === 2) {
+    const pattern = TEMPLATES[num].pattern;
+    html += `<h3>${TEMPLATES[num].name}</h3>`;
+    html += '<div class="pattern-row">';
+    for (let d = 0; d < 7; d++) {
+      const p = pattern[d];
+      html += `<div class="pattern-cell cell-${p.toLowerCase()}"><span class="dow-name">${DOW_LABELS[d]}</span>${p === 'A' ? 'Robin' : 'Isaac'}</div>`;
+    }
+    html += '</div>';
+  } else if (num === 3) {
+    html += `<h3>Isaac's Proposal — Week On/Off</h3>`;
+    html += '<div class="pattern-row">';
+    for (let d = 0; d < 7; d++) {
+      html += `<div class="pattern-cell cell-${d < 7/2 ? 'a' : 'b'}"><span class="dow-name">${DOW_LABELS[d]}</span>${d < 7/2 ? 'Robin' : 'Isaac'}</div>`;
+    }
+    html += '</div>';
+    html += '<div style="margin-top:8px;font-size:.92em;color:#7f8c8d">Full weeks alternate between parents. Robin starts first week.</div>';
+  } else if (num === 4) {
+    html += `<h3>2-2-5 School Year</h3>`;
+    html += '<div class="pattern-row">';
+    const pattern = TEMPLATES[4].pattern;
+    for (let i = 0; i < 14; i++) {
+      const p = pattern[i];
+      html += `<div class="pattern-cell cell-${p.toLowerCase()}"><span class="dow-name">Day ${i+1}</span>${p === 'A' ? 'Robin' : 'Isaac'}</div>`;
+    }
+    html += '</div>';
+    html += '<div style="margin-top:8px;font-size:.92em;color:#7f8c8d">Each parent has the same weekdays every week, with weekends alternating. Creates a steady, predictable routine for school-aged children.</div>';
   }
+  document.getElementById('patternKey').innerHTML = html;
 }
 
 // ─────────────────────────────────────────────
@@ -634,8 +650,12 @@ function initDays() {
 // ─────────────────────────────────────────────
 function applyTemplate(num) {
   currentTemplate = num;
-  [0, 1, 2, 3].forEach(n => document.getElementById('btnTemplate' + n).classList.remove('active'));
-  document.getElementById('btnTemplate' + num).classList.add('active');
+  [0, 1, 2, 3, 4].forEach(n => {
+    const btn = document.getElementById('btnTemplate' + n);
+    if (btn) btn.classList.remove('active');
+  });
+  const btn = document.getElementById('btnTemplate' + num);
+  if (btn) btn.classList.add('active');
 
   initDays();
   if (num === 1 || num === 2) {
@@ -643,18 +663,19 @@ function applyTemplate(num) {
     days.forEach(d => { if (!d.locked) d.parent = pattern[d.date.getDay()]; });
   } else if (num === 3) {
     // Week-on / week-off: alternate full weeks Sun–Sat, Robin starts first week
-    // Determine ISO week number relative to school start to alternate
     days.forEach(d => {
       if (!d.locked) {
-        // Count full weeks from SCHOOL_START (Sun-anchored)
         const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-        // Find the Sunday on or before SCHOOL_START
         const startSunday = new Date(SCHOOL_START);
         startSunday.setDate(SCHOOL_START.getDate() - SCHOOL_START.getDay());
         const weekIndex = Math.floor((d.date - startSunday) / msPerWeek);
         d.parent = weekIndex % 2 === 0 ? 'A' : 'B';
       }
     });
+  } else if (num === 4) {
+    // 2-2-5: 14-day cycle, starting with Parent A
+    const pattern = TEMPLATES[4].pattern;
+    days.forEach((d, i) => { if (!d.locked) d.parent = pattern[i % 14]; });
   }
 
   renderPatternKey(num);
