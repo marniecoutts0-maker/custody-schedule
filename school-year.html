@@ -615,36 +615,6 @@ function fullDateStr(d) {
 // ─────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────
-  let html = '';
-  if (num === 1 || num === 2) {
-    const pattern = TEMPLATES[num].pattern;
-    html += `<h3>${TEMPLATES[num].name}</h3>`;
-    html += '<div class="pattern-row">';
-    for (let d = 0; d < 7; d++) {
-      const p = pattern[d];
-      html += `<div class="pattern-cell cell-${p.toLowerCase()}"><span class="dow-name">${DOW_LABELS[d]}</span>${p === 'A' ? 'Robin' : 'Isaac'}</div>`;
-    }
-    html += '</div>';
-  } else if (num === 3) {
-    html += `<h3>Isaac's Proposal — Week On/Off</h3>`;
-    html += '<div class="pattern-row">';
-    for (let d = 0; d < 7; d++) {
-      html += `<div class="pattern-cell cell-${d < 7/2 ? 'a' : 'b'}"><span class="dow-name">${DOW_LABELS[d]}</span>${d < 7/2 ? 'Robin' : 'Isaac'}</div>`;
-    }
-    html += '</div>';
-    html += '<div style="margin-top:8px;font-size:.92em;color:#7f8c8d">Full weeks alternate between parents. Robin starts first week.</div>';
-  } else if (num === 4) {
-    html += `<h3>2-2-5 School Year</h3>`;
-    html += '<div class="pattern-row">';
-    const pattern = TEMPLATES[4].pattern;
-    for (let i = 0; i < 14; i++) {
-      const p = pattern[i];
-      html += `<div class="pattern-cell cell-${p.toLowerCase()}"><span class="dow-name">Day ${i+1}</span>${p === 'A' ? 'Robin' : 'Isaac'}</div>`;
-    }
-    html += '</div>';
-    html += '<div style="margin-top:8px;font-size:.92em;color:#7f8c8d">Each parent has the same weekdays every week, with weekends alternating. Creates a steady, predictable routine for school-aged children.</div>';
-  }
-  document.getElementById('patternKey').innerHTML = html;
 }
 
 // ─────────────────────────────────────────────
