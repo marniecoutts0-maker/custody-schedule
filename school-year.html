@@ -644,9 +644,21 @@ function applyTemplate(num) {
       }
     });
   } else if (num === 4) {
-    // 2-2-5: 14-day cycle, starting with Parent A
+    // 2-2-5: 14-day cycle, always aligned to Monday
     const pattern = TEMPLATES[4].pattern;
-    days.forEach((d, i) => { if (!d.locked) d.parent = pattern[i % 14]; });
+    // Find the first Monday on or after SCHOOL_START
+    let firstMondayIdx = days.findIndex(d => d.date.getDay() === 1); // 1 = Monday
+    if (firstMondayIdx === -1) firstMondayIdx = 0;
+    days.forEach((d, i) => {
+      if (!d.locked) {
+        if (i < firstMondayIdx) {
+          d.parent = null; // Unassigned before first Monday
+        } else {
+          const patternIdx = (i - firstMondayIdx) % 14;
+          d.parent = pattern[patternIdx];
+        }
+      }
+    });
   }
 
   renderPatternKey(num);
